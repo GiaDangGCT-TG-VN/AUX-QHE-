@@ -1,0 +1,69 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+my_qiskitenv/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# Results data (too large for GitHub)
+results/interim_autosave/*.json
+results/archive_hardware/*.json
+*.csv
+
+# QASM exports (generated files)
+qasm3_exports/*.qasm
+
+# Debug output
+debug_output/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Temporary files
+*.log
+*.tmp
+*.temp
+trace_corrected.txt
+
+# IBM credentials (IMPORTANT - never commit)
+*.env
+credentials.json
+ibm_credentials.json
+
+# Large binary files
+*.png
+*.jpg
+*.jpeg
+*.pdf

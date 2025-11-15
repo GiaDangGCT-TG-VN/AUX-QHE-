@@ -1,0 +1,128 @@
+% ============================================================================
+% LaTeX Tables for AUX-QHE Paper
+% Generated: 2025-10-27
+%
+% Tables included:
+%   1. Hardware Performance (Table 1)
+%   2. Key Size and Auxiliary States (Table 2)
+%   3. Local Simulation Performance (Table 3)
+% ============================================================================
+
+% ============================================================================
+% TABLE 1: Hardware Execution Performance
+% ============================================================================
+
+\begin{table}[htbp]
+\centering
+\caption{Hardware Execution Performance on IBM Quantum (ibm\_torino, 133 qubits)}
+\label{tab:Hardware_performance}
+\begin{tabular}{lrllll}
+\toprule
+Config & Aux States & HW Method & HW Fidelity & HW TVD & Fidelity Drop \\
+\midrule
+5q-2t & 575 & Baseline & 0.0285 & 0.8994 & 97.15\% \\
+5q-2t & 575 & ZNE & 0.0323 & 0.8941 & 96.77\% \\
+5q-2t & 575 & Opt-3 & 0.0307 & 0.8877 & 96.93\% \\
+5q-2t & 575 & Opt-3+ZNE & 0.0286 & 0.9065 & 97.14\% \\
+4q-3t & 10776 & Baseline & 0.0297 & 0.8916 & 97.03\% \\
+4q-3t & 10776 & ZNE & 0.0305 & 0.8856 & 96.95\% \\
+4q-3t & 10776 & Opt-3 & 0.0293 & 0.8760 & 97.07\% \\
+4q-3t & 10776 & Opt-3+ZNE & 0.0310 & 0.8910 & 96.90\% \\
+5q-3t & 31025 & Baseline & 0.0093 & 0.8887 & 99.07\% \\
+5q-3t & 31025 & ZNE & 0.0116 & 0.8891 & 98.84\% \\
+5q-3t & 31025 & Opt-3 & 0.0115 & 0.8906 & 98.85\% \\
+5q-3t & 31025 & Opt-3+ZNE & 0.0077 & 0.8821 & 99.23\% \\
+\bottomrule
+\end{tabular}
+\footnotesize
+\textit{Note: ZNE applies Zero-Noise Extrapolation with noise factors [1, 2, 3]. Experiments executed on October 27, 2025.}
+\end{table}
+
+% ============================================================================
+% TABLE 2: Key Size and Auxiliary States
+% ============================================================================
+
+\begin{table}[htbp]
+\centering
+\caption{Key Size and Auxiliary States for AUX-QHE Protocol}
+\label{tab:Key}
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{Config} & \textbf{Aux States} & \textbf{Layer Sizes} & \textbf{Efficiency} & \textbf{Cross Terms} & \textbf{Eval Time (s)} \\
+\midrule
+3q-2t & 135 & $6, 39$ & 67.5 & 15 & 0.260 \\
+3q-3t & 2826 & $6, 39, 897$ & 942.0 & 756 & 0.033 \\
+4q-2t & 304 & $8, 68$ & 152.0 & 28 & 0.032 \\
+4q-3t & 10776 & $8, 68, 2618$ & 3592.0 & 2306 & 0.007 \\
+5q-2t & 575 & $10, 105$ & 287.5 & 45 & 0.009 \\
+5q-3t & 31025 & $10, 105, 6090$ & 10341.7 & 5505 & 0.009 \\
+\bottomrule
+\end{tabular}
+\footnotesize
+\textit{Note: Layer sizes show auxiliary states per T-depth layer. Cross Terms = total polynomial cross-products in T-set. Efficiency = Aux States / T-depth.}
+\end{table}
+
+% ============================================================================
+% TABLE 3: Local Simulation Performance (Ideal Behavior)
+% ============================================================================
+
+\begin{table}[htbp]
+\centering
+\caption{AUX-QHE Algorithm Performance on Local Simulation (Ideal, No Noise)}
+\label{tab:algorithm_performance}
+\footnotesize
+\begin{tabular}{llllrllll}
+\toprule
+Config & Fidelity & TVD & QASM & Aux States & Aux Prep (s) & T-Gadget (s) & BFV Eval (s) & Total Time (s) \\
+\midrule
+3q-2t & 1.0000 & 0.0000 & 2 & 135 & 0.002 & 0.000 & 0.260 & 0.262 \\
+3q-3t & 1.0000 & 0.0000 & 2 & 2826 & 0.038 & 0.004 & 0.033 & 0.075 \\
+4q-2t & 1.0000 & 0.0000 & 2 & 304 & 0.004 & 0.000 & 0.032 & 0.037 \\
+4q-3t & 1.0000 & 0.0000 & 2 & 10776 & 0.183 & 0.013 & 0.031 & 0.228 \\
+5q-2t & 1.0000 & 0.0000 & 2 & 575 & 0.009 & 0.001 & 0.032 & 0.042 \\
+5q-3t & 1.0000 & 0.0000 & 2 & 31025 & 0.597 & 0.036 & 0.032 & 0.664 \\
+\bottomrule
+\end{tabular}
+\footnotesize
+\textit{Note: Local simulation demonstrates ideal algorithm correctness (Fidelity $\approx$ 1.0, TVD $\approx$ 0.0).}
+\end{table}
+
+% ============================================================================
+% ADDITIONAL TABLE (OPTIONAL): ZNE Performance Improvement
+% ============================================================================
+
+% Uncomment this section if you want to add a summary table showing ZNE improvements
+
+% \begin{table}[htbp]
+% \centering
+% \caption{ZNE Error Mitigation Performance Improvement}
+% \label{tab:ZNE_improvement}
+% \begin{tabular}{lrrr}
+% \toprule
+% \textbf{Config} & \textbf{Baseline Fidelity} & \textbf{ZNE Fidelity} & \textbf{Improvement} \\
+% \midrule
+% 5q-2t & 2.85\% & 3.23\% & +13.4\% \\
+% 4q-3t & 2.97\% & 3.05\% & +2.5\% \\
+% 5q-3t & 0.93\% & 1.16\% & +25.3\% \\
+% \midrule
+% \textbf{Average} & \textbf{2.25\%} & \textbf{2.48\%} & \textbf{+13.7\%} \\
+% \bottomrule
+% \end{tabular}
+% \footnotesize
+% \textit{Note: ZNE shows consistent improvement, with greatest benefit for complex circuits (5q-3t).}
+% \end{table}
+
+% ============================================================================
+% END OF LATEX TABLES
+% ============================================================================
+
+% How to use these tables in your Overleaf document:
+% 1. Copy the desired table code above
+% 2. Paste into your .tex file where you want the table to appear
+% 3. Make sure you have \usepackage{booktabs} in your preamble
+% 4. Compile your document
+%
+% References in text:
+% - Table~\ref{tab:Hardware_performance} shows hardware execution results...
+% - As shown in Table~\ref{tab:Key}, the auxiliary state requirements...
+% - Table~\ref{tab:algorithm_performance} demonstrates ideal algorithm correctness...

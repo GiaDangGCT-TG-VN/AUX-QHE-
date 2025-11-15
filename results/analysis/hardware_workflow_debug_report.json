@@ -1,0 +1,89 @@
+{
+  "total_issues": 9,
+  "critical_count": 2,
+  "high_count": 3,
+  "medium_count": 4,
+  "issues": [
+    {
+      "config": "5q-2t",
+      "method": "ZNE",
+      "issue_type": "DEPTH_MEASUREMENT_TIMING",
+      "severity": "HIGH",
+      "description": "Depth recorded BEFORE ZNE folding (19), should be 38-57",
+      "impact": "Cannot accurately assess depth impact on fidelity",
+      "location": "ibm_hardware_noise_experiment.py:305 (before apply_zne call at line 323)"
+    },
+    {
+      "config": "5q-2t",
+      "method": "ZNE",
+      "issue_type": "SHOT_COUNT_MISMATCH",
+      "severity": "CRITICAL",
+      "description": "Encrypted counts sum (1008) != shots (1024)",
+      "impact": "Fidelity calculation may be incorrect",
+      "location": "ibm_hardware_noise_experiment.py:323-355 (execution section)"
+    },
+    {
+      "config": "5q-2t",
+      "method": "Opt-3+ZNE",
+      "issue_type": "DEPTH_MEASUREMENT_TIMING",
+      "severity": "HIGH",
+      "description": "Depth recorded BEFORE ZNE folding (27), should be 54-81",
+      "impact": "Cannot accurately assess depth impact on fidelity",
+      "location": "ibm_hardware_noise_experiment.py:305 (before apply_zne call at line 323)"
+    },
+    {
+      "config": "5q-2t",
+      "method": "Opt-3+ZNE",
+      "issue_type": "SHOT_COUNT_MISMATCH",
+      "severity": "CRITICAL",
+      "description": "Encrypted counts sum (1004) != shots (1024)",
+      "impact": "Fidelity calculation may be incorrect",
+      "location": "ibm_hardware_noise_experiment.py:323-355 (execution section)"
+    },
+    {
+      "config": "5q-2t",
+      "method": "ZNE",
+      "issue_type": "ZNE_DEPTH_TOO_LOW",
+      "severity": "HIGH",
+      "description": "ZNE depth (19) not 2-3x baseline (18)",
+      "impact": "Depth measured before folding, not after",
+      "location": "ibm_hardware_noise_experiment.py:305"
+    },
+    {
+      "config": "5q-2t",
+      "method": "ZNE",
+      "issue_type": "ERROR_MITIGATION_DEGRADES_FIDELITY",
+      "severity": "MEDIUM",
+      "description": "ZNE fidelity (0.029611) is 14.4% worse than Baseline (0.034607)",
+      "impact": "May indicate workflow issue or genuine hardware finding",
+      "location": "Possible causes: wrong qubit allocation (Opt-3), ZNE overfitting, or circuit in sweet spot"
+    },
+    {
+      "config": "5q-2t",
+      "method": "Opt-3",
+      "issue_type": "ERROR_MITIGATION_DEGRADES_FIDELITY",
+      "severity": "MEDIUM",
+      "description": "Opt-3 fidelity (0.028423) is 17.9% worse than Baseline (0.034607)",
+      "impact": "May indicate workflow issue or genuine hardware finding",
+      "location": "Possible causes: wrong qubit allocation (Opt-3), ZNE overfitting, or circuit in sweet spot"
+    },
+    {
+      "config": "5q-2t",
+      "method": "Opt-3+ZNE",
+      "issue_type": "ERROR_MITIGATION_DEGRADES_FIDELITY",
+      "severity": "MEDIUM",
+      "description": "Opt-3+ZNE fidelity (0.031442) is 9.1% worse than Baseline (0.034607)",
+      "impact": "May indicate workflow issue or genuine hardware finding",
+      "location": "Possible causes: wrong qubit allocation (Opt-3), ZNE overfitting, or circuit in sweet spot"
+    },
+    {
+      "config": "5q-2t",
+      "method": "Opt-3",
+      "issue_type": "DEPTH_FIDELITY_PARADOX",
+      "severity": "MEDIUM",
+      "description": "Lowest depth method (Opt-3) has worse fidelity than highest depth (Opt-3+ZNE)",
+      "impact": "Suggests circuit depth is NOT primary noise driver, or qubit allocation issue",
+      "location": "Likely due to Opt-3 using worse qubits, not a workflow bug"
+    }
+  ]
+}

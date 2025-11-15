@@ -1,0 +1,13 @@
+{
+  "average_improvement": 0.41,
+  "best_improvement": 0.98,
+  "improvement_range": [
+    -0.58,
+    0.98
+  ],
+  "average_confidence": 0.559,
+  "best_confidence": 0.848,
+  "total_shots": 26624,
+  "success_rate": 100.0,
+  "execution_time": 128.04
+}

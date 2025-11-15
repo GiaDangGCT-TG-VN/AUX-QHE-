@@ -1,0 +1,382 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithm}
+\usepackage{graphicx}
+\usepackage{amsfonts}
+\usepackage{pdflscape} % For landscape orientation
+\usepackage{siunitx}
+\usepackage{algpseudocode}
+\usepackage{physics}
+\usepackage{amssymb}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{tabularx}
+\usepackage{multirow}   
+\usepackage{glossaries}
+\usepackage{tikz}
+\usepackage{booktabs} % For better table formatting
+\usepackage{caption}  % For table captions
+\usepackage{balance}  % Balance last page columns
+\usepackage{microtype} % Better text spacing
+
+
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+
+
+\makeglossaries
+\newacronym{QOTP}{QOTP}{Quantum One-Time Pad}
+\newacronym{QCC}{QCC}{Quantum Cloud Computing}
+\newacronym{QFHE}{QFHE}{Quantum Fully Homomorphic Encryption}
+\newacronym{FHE}{FHE}{Fully Homomorphic Encryption}
+\newacronym{QHE}{QHE}{Quantum Homomorphic Encryption}
+\newacronym{BFV}{BFV}{Brakerski-Fan-Vercauteren}
+\newacronym{AUX}{AUX}{Auxiliary}
+\newacronym{NISQ}{NISQ}{Noisy Intermediate-scale Quantum}
+\newacronym{QEC}{QEC}{Quantum Error Correction}
+\newacronym{EPR}{EPR}{Einstein-Podolsky-Rosen} 
+\newacronym{LWE}{LWE}{Learning With Error} 
+\newacronym{PQC}{PQC}{Post-Quantum Cryptography} 
+\newacronym{TVD}{TVD}{Total Variation Distance}
+\newacronym{PEC}{PEC}{Probabilistic Error Cancellation}
+\newacronym{ZNE}{ZNE}{Zero-Noise Extrapolation}
+\newacronym{QEM}{QEM}{Quantum Error Mitigation}
+
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{Experimental Validation of Auxiliary-Based Quantum Homomorphic Encryption on IBM Quantum Platforms \\
+
+\thanks{Identify applicable funding agency here. If none, delete this.}
+}
+
+\author{\IEEEauthorblockN{1\textsuperscript{st} Given Name Surname}
+\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
+\textit{name of organization (of Aff.)}\\
+City, Country \\
+email address or ORCID}
+\and
+\IEEEauthorblockN{2\textsuperscript{nd} Given Name Surname}
+\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
+\textit{name of organization (of Aff.)}\\
+City, Country \\
+email address or ORCID}
+\and
+\IEEEauthorblockN{3\textsuperscript{rd} Given Name Surname}
+\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
+\textit{name of organization (of Aff.)}\\
+City, Country \\
+email address or ORCID}
+}
+
+\maketitle
+
+\begin{abstract}
+\gls{QHE} addresses quantum cloud computing security concerns by ensuring privacy of a client's confidential algorithms and data when outsourced to untrusted third-party quantum servers. However, current QHE schemes face significant challenges: scaling computational resources introduces overhead and hardware noise, which degrade accuracy and compromise security. This paper implements and analyzes a non-interactive \gls{AUX}-\gls{QHE} scheme that employs pre-generated auxiliary states for universal computation. We identify three critical computational bottlenecks: exponential growth in auxiliary state count, complex homomorphic evaluation, and extensive symbolic key updates. Through experimental evaluation on IBM Quantum hardware, we quantify the impact of NISQ noise on \gls{AUX}-\gls{QHE} performance and establish practical resource thresholds for deployment. Our results bridge the gap between theoretical \gls{QHE} frameworks and their practical implementation on noisy quantum devices, providing concrete benchmarks for future noise mitigation efforts.
+\end{abstract}
+
+\begin{IEEEkeywords}
+component, formatting, style, styling, insert
+\end{IEEEkeywords}
+
+\section{Introduction}
+\gls{QCC} merges quantum hardware with traditional cloud infrastructure, granting clients remote access to powerful quantum computing without requiring local hardware \cite{golec2024quantum}. This hybrid model has spurred research and development across numerous quantum applications \cite{mahato2023comparative}. However, the growing adoption of \gls{QCC} also introduces significant data security challenges, such as the potential algorithm exposure and unauthorised data access during the outsourcing process \cite{kilber2021cybersecurity}.
+
+\gls{QHE} has emerged as a promising cryptographic solution to these security concerns \cite{golec2024quantum}. It allows a quantum server to perform computations on a client's encrypted data without decrypting the initial quantum states. The natural progression of this concept is \gls{QFHE}, which aims to support arbitrary quantum circuits, enabling universal quantum computation, compact decryption, and robust security \cite{zhu2021quantum, zhang2022secure}. Despite these theoretical advantages, many proposed \gls{QFHE} schemes are constrained by high computational complexity and hardware resource requirements, limiting their practical deployment between theory and practical implementation \cite{dulek2016quantum, gupte2024construct, savadatti2025analysis}.
+
+\gls{QHE} architectures are generally classified as interactive or non-interactive protocols, based on the client's involvement \cite{shang2024quantum}. While the interactive protocol can facilitate multiparty verification and universal computation, their significant resource demands limit scalability and make them impractical for current \gls{NISQ} systems \cite{zeuner2021experimental, alagic2017quantum, goyal2018quantum, broadbent2015quantum}. The non-interactive QHE protocol, while promising for hybrid quantum clouds, struggle to achieve both universal decryption and information-theoretic security simultaneously, a limitation imposed by the no-go theorem \cite{liang2020teleportation}. Consequently, Broadbent and Jeffery (2015) introduce two universal evaluation schemes (\gls{AUX} and \gls{EPR}) for the non-interactive QHE structure, which integrate with classical FHE to satisfy the practical limitation of the no-go theorem \cite{broadbent2015quantum}.
+
+Both EPR and AUX evaluation schemes are designed to address unwanted phase errors raised by T-gate evaluation during quantum universal computation in this cryptographic system \cite{cleve1998quantum}. In particular, the EPR method uses Bell pair entanglement to postpone T-gate errors until the end of the algorithm, while \gls{AUX} prepares a correction tool at the beginning of the process. According to existing theoretical assumptions and experimental results \cite{broadbent2015quantum, ganjian2024demonstrating}, EPR shows advantages in performing arbitrary computation circuits without T-gate restrictions. However, the performance of EPR methods degrades quadratically with increasing T-gate count, leading to impracticality with complex circuits. On the other hand, theoretical predictions state \cite{broadbent2015quantum} that generating auxiliary qubits for handling T-gate errors will exponentially introduce auxiliary states at high T-depth, which becomes inefficient with current NISQ infrastructure. While the EPR method has been widely applied and improved in recent \gls{QHE} models, empirical implementation of the \gls{AUX} scheme has received limited attention \cite{dulek2016quantum, fernandez2024implementing, ortega2025implementing}.
+
+This paper bridges this gap by presenting a practical implementation of the \gls{AUX}-\gls{QHE} algorithm that incorporates a \gls{FHE} scheme for key protection. Our contributions are as follows: 
+\begin{itemize}
+    \item We design and implement all complex features of the \gls{AUX}-\gls{QHE} algorithm, including pre-generated auxiliary qubits and symbolic key management. These elements establish a practical foundation for \gls{AUX} methods, enabling precise identification of computational overheads.
+    \item By analysing the performance of the scheme on the IBM Quantum platform, we assess the impact of noisy hardware, which helps bridge the gap in understanding the feasibility of \gls{AUX} and \gls{EPR} in practice. 
+\end{itemize}
+These strategies are vital for understanding the scalability of practical \gls{QHE} and ensuring its compatibility with future \gls{QFHE} models. 
+
+The remainder of this paper is structured as follows. Section 2 reviews the relevant theory of \gls{QHE}. Section 3 details the \gls{AUX}-\gls{QHE} methodology within the \gls{FHE} framework, as implemented using Qiskit and IBM Quantum. Section 4 evaluates the simulation results from the IBM Quantum platform and recommends improvements. Finally, Section 5 investigates the future feasibility of the \gls{FHE}-\gls{AUX}-\gls{QHE} scheme when combined with error mitigation techniques.
+
+\section {Related Work}
+
+Although the \gls{AUX}-\gls{QHE} scheme theoretically achieves universal computation and compact decryption, a major barrier of this algorithm is the super-exponential growth pattern in evaluation keys required for T-depth \cite{broadbent2015quantum}. To address these auxiliary-related issues, \cite{alagic2017quantum} proposes a vQFHE scheme TrapTP leveraging garden-hose gadgets, classical FHE, and additional auxiliary magic states for the evaluation phase. However, this vQFHE scheme faces complicated key and gadget management, which requires large-scale quantum infrastructure for deployment.
+
+Moreover, Mahadev and Urmila \cite{mahadev2020classical} proposed a hybrid scheme using classical \gls{FHE} to handle T-gate computations. While it can handle higher T-gates than the \gls{AUX}-\gls{QHE} algorithm, this approach introduces large ciphertexts and significant noise accumulation inherent in the classical \gls{FHE} component. These hybrid approaches demonstrate the critical value of auxiliary states in managing T-gate overhead for future \gls{QHE}. Beyond T-gate management, verifiability has emerged as another important consideration. \cite{li2025verifiable} introduces a verifiable \gls{QHE} model with universal Toffoli gates, extended from \cite{mahadev2020classical} and \cite{broadbent2015quantum}'s verifiable quantum computing framework. However, this verifiable \gls{QHE} requires extensive quantum resources from clients, limiting its practical deployment.
+
+As quantum hardware matures, empirical studies have become crucial for assessing the real-world viability of \gls{QHE} algorithms beyond pure theory \cite{montanaro2016quantum,garcia2025resilience}. Recent work has begun to explore these practical limitations through experimental implementations. Fernandez et al. \cite{fernandez2024implementing} implemented a non-interactive \gls{QHE} version of Grover's algorithm on IBM Quantum hardware using \gls{EPR} evaluation for T-gate handling. Their results reveal a practical limit of 3 qubits and 7 (T/$T^\dagger$) gates for the QHE-Grover algorithm, highlighting current infeasibility for heavy T-gate circuits. Similarly, Ganjian et al. \cite{ganjian2024demonstrating} demonstrated an \gls{FHE}-\gls{QHE} scheme leveraging the \gls{EPR} evaluation method from \cite{broadbent2015quantum}, illustrating threshold behavior in qubit count and execution time—both critical metrics for evaluating computational cost. Across these implementations, hardware noise emerges as the dominant limiting factor, constraining circuit depth and overall accuracy. This underscores the urgent need for noise-aware algorithm design and effective mitigation strategies in practical \gls{QHE} deployments.
+
+Despite these advances, a critical gap remains in the literature. While foundational theoretical work on \gls{FHE}-\gls{AUX}-\gls{QHE} exists, and empirical studies have been conducted on QHE variants, implementing the \gls{FHE}-\gls{AUX}-\gls{QHE} framework on real \gls{NISQ} systems has been lacking. Existing studies often do not provide clear guidelines for noise adaptation or a detailed analysis of the resource bottlenecks specific to the \gls{AUX} methodology. This paper aims to fill this gap by providing an experimental implementation of the \gls{FHE}-\gls{AUX}-\gls{QHE} scheme on a public quantum cloud platform, analyzing its performance in the presence of realistic hardware noise, and establishing benchmarks for future noise mitigation efforts.
+
+\section{Theoretical Background}
+
+\subsection{Architecture of \gls{QHE} Algorithms}
+The \gls{QHE} scheme, particularly one combined with classical \gls{FHE} as described by Broadbent and Jeffery \cite{broadbent2015quantum}, is typically composed of four core algorithms: Key Generation (QHE.KeyGen), Encryption (QHE.Enc), Homomorphic Evaluation (QHE.Eval), and Decryption (QHE.Dec). These are formally expressed as:
+
+\begin{align*}
+\textbf{QHE.KeyGen}(1^\kappa) &\to (pk, sk, \rho_{evk}) \\[6pt]
+\textbf{QHE.Enc}_{\text{pk}} &: D(\mathcal{M}) \to D(\mathcal{C}) \\[6pt]
+\textbf{QHE.Eval}^{C} &: D(\mathcal{R}_{evk} \otimes \mathcal{C}^{\otimes n}) \to D(\mathcal{C'}^{\otimes m}) \\[6pt]
+\textbf{QHE.Dec}_{\text{sk}} &: D(\mathcal{C'}) \to D(\mathcal{M})
+\end{align*}
+where:
+\begin{itemize}
+    \item n, m: fold Cipherstate. 
+    \item $\mathcal{M}$: Message space. 
+    \item $\mathcal{C}$ : Cipherspace.
+    \item $\mathcal{C'}$: Evaluated cipherspace.
+    \item $\mathcal{R}_{evk}$: Evaluation key register.
+    \item pk, sk: Classical public/secret keys. 
+    \item $\rho_{evk}$: Quantum evaluation key. 
+\end{itemize}
+
+\begin{figure*}[h]
+    \centering
+    \caption{ Relationship between \gls{QOTP} and Homomorphic Evaluation within \gls{QHE} }
+    \includegraphics[width=0.8\textwidth]{QOTP_process.png} 
+    \label{fig:relationship}
+\end{figure*}
+
+The components of a \gls{QHE} scheme are described below:
+
+\subsubsection{\gls{QOTP} in \gls{QHE}}
+The \gls{QOTP} serves as the foundational encryption primitive for nearly all \gls{QHE} schemes \cite{liang2020teleportation, broadbent2015quantum}. During encryption (\texttt{QHE.Enc}), the client uses \gls{QOTP} to encode quantum data before sending it to the server \cite{cheng2024quantum}. The encryption process applies random Pauli-X and Pauli-Z operations, determined by secret keys generated during key generation (\texttt{Key.Gen}) \cite{ambainis2000private}. During decryption (\texttt{QHE.Dec}), these keys must be correctly updated to account for the homomorphic operations performed on the encrypted data \cite{liang2020teleportation}. Moreover, \gls{QOTP} provides information-theoretic security by ensuring that encrypted quantum states appear completely random to any adversary without the decryption keys \cite{perepechaenko2023quantum}.
+
+\subsubsection{Homomorphic Evaluation Circuit}
+Homomorphic evaluation (\texttt{QHE.Eval}) represents the most challenging component, as it must maintain encryption while correctly updating the associated \gls{QOTP} keys to ensure proper decryption—a process called the key updating process \cite{zeuner2021experimental}. In this framework, \texttt{QHE.Eval} consists of two parts in nearly all QHE algorithms: non-Clifford (T-gate) evaluation and Clifford (X, Z, H, P, and CNOT gates) evaluation \cite{gottesman1998heisenberg}.
+
+\paragraph{Clifford Gate Evaluation}
+The \gls{QOTP} keys are efficiently updated in Clifford circuits by following the key updating rules shown in Table~\ref{tab:key_update}, due to alignment between key updates and circuit design in \gls{QHE} \cite{cheng2024quantum}. The key updating rules are directly applied during homomorphic evaluation, as illustrated in Figure~\ref{fig:clifford_eval}.
+
+\paragraph{Non-Clifford Gate Evaluation}
+Although non-Clifford gates (particularly the T-gate) are essential for achieving universal quantum computation, the T-gate does not preserve the Pauli encryption structure \cite{dulek2016quantum, cheng2024quantum}. This transformation can be expressed as:
+\[T X^a Z^b = X^a Z^{a \oplus b} P^a T\]
+where \(a, b \in \{0,1\}\) represent the \gls{QOTP} keys. The appearance of the phase gate (P) error creates complications that cannot be handled using simple classical key updates alone \cite{mahadev2020classical, biamonte2021universal}.
+
+\begin{table}[H]
+\centering
+\caption{Key Update Rules for Clifford circuit}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{|c|c|c|l|}
+\hline
+\textbf{Gate} & \textbf{Input Key $(a, b)$} & \textbf{Update Rule} & \textbf{Notes} \\
+\hline
+$X$ & $(a, b)$ & $a' = a,\ b' = b$ & No change \\
+$Z$ & $(a, b)$ & $a' = a,\ b' = b$ & No change \\
+$H$ & $(a, b)$ & $a' = b,\ b' = a$ & Swap keys \\
+$P$ & $(a, b)$ & $a' = a,\ b' = b \oplus a$ & Updates phase key \\
+\hline
+\textbf{CNOT} & \multirow{2}{*}{$(a_i, b_i),\ (a_j, b_j)$} & $a'_i = a_i,\quad b'_i = b_i \oplus b_j$ & \multirow{2}{*}{Two-qubit gate} \\
+(control=$i$, target=$j$) & & $a'_j = a_i \oplus a_j,\quad b'_j = b_j$ & \\
+\hline
+\end{tabular}
+}
+\label{tab:clifford-key-updates}
+\end{table}
+
+\subsection{Universal homomorphism methodologies}
+Among the various non-interactive \gls{QHE} schemes, the \gls{EPR} and \gls{AUX} methods are recognised as foundations for performing universal computations. Examining \gls{EPR} and \gls{AUX} operations in the \gls{NISQ} environment will reveal significant limitations inherent in non-interactive \gls{QHE} algorithms and offer valuable empirical insights that can support the development of more scalable algorithms.
+
+\subsubsection{The \gls{EPR} evaluation method}
+The \gls{EPR} approach uses quantum entanglement (Bell pairs) to defer P-gate corrections until decryption, effectively managing the phase errors by transferring the computational burden to the client side \cite{broadbent2015quantum}. This EPR method allows unrestricted T-gate arrangement and arbitrary quantum circuits on the QHE algorithm. However, this deferral strategy leads to quadratic growth in decryption complexity, severely limiting the scalability of the \gls{EPR} framework.
+
+\subsubsection{The \gls{AUX} Framework} 
+The \gls{AUX}-based approach (\gls{AUX}-\gls{QHE}) offers an alternative solution by using pre-generated auxiliary qubits to handle T-gate evaluation , expressed as: \(|+_{f,k}\rangle := Z^k P^f |+\rangle \) \cite{broadbent2015quantum}. The \gls{AUX} framework maintains compact decryption while proactively managing the T-gate complications through specialised quantum circuits called T-gadgets, being a critical factor for managing the conditional P-error. As shown in Figure \ref{fig:difference}, although the \gls{EPR} and \gls{AUX} evaluation methods similarly utilise the T-gate gadget, they execute it differently due to the distinct T-gate handling and key updating mechanisms. In \gls{AUX}, the T-gadgets consume auxiliary qubits to process T-gates homomorphically, effectively isolating the phase errors and maintaining the security of the encryption scheme. 
+
+While the \gls{AUX} approach offers more efficient decryption compared to \gls{EPR}, it faces a critical scalability challenge: the number of required auxiliary states grows exponentially with the circuit's T-depth. For a circuit with T-depth $L$ and n as number of qubits, the auxiliary resource requirement scales as $O(n^{2^{L-1} + 1})$, making large-scale implementations computationally prohibitive. However, the \gls{AUX}-based \gls{QHE} algorithms have no empirical validation or concrete execution thresholds. This limitation prevents practitioners from identifying the precise operational boundaries of \gls{AUX} techniques for further development of \gls{QHE} algorithms.
+
+\begin{figure}[h]
+    \centering
+    \caption{ Differences between the \gls{EPR} and \gls{AUX} schemes}
+    \includegraphics[width=0.45\textwidth]{Comparison EPR-AUX.png} 
+    \label{fig:difference}
+\end{figure}
+
+\subsection{Hardware Noise Analysis}
+Practical quantum algorithms face significant challenges from hardware imperfections, qubit decoherence, and quantum state fragility \cite{resch2021benchmarking}. Therefore, \gls{QEC} is essential for enhancing fault tolerance and preserving computational precision throughout quantum protocols \cite{ouyang2022general}.
+
+\subsubsection{Role of \gls{QEC} in Quantum Homomorphic Circuits}
+
+For \gls{QHE} schemes, \gls{QEC} approaches are crucial for maintaining computational accuracy in noisy quantum environments \cite{martinez2022decoherence}. However, integrating \gls{QHE} algorithms with \gls{QEC} presents unique challenges, as homomorphic operations can amplify noise effects and complicate error correction procedures. Two primary strategies address noise mitigation in \gls{QHE}: active \gls{QEC} and passive \gls{QEM} methods \cite{resch2021benchmarking}.
+
+\subsubsection{Active \gls{QEC} and Passive \gls{QEM} Methods}
+
+In QHE, active \gls{QEC} methods refer to dynamically applying surface codes and other topological error correction protocols to proactively detect and correct errors in real-time during quantum circuit execution \cite{ouyang2022general, stephens2014fault}. However, these dynamic correction methods are impractical because they require hundreds to thousands of physical qubits per logical qubit, exceeding the capacity of current \gls{NISQ} hardware \cite{babu2023quantum, google2023suppressing}.
+
+In contrast, passive \gls{QEM} focuses on mitigating hardware noise through post-processing of measurement results without modifying the underlying quantum circuit \cite{endo2018practical}. These methods rely on inherent error characteristics of quantum hardware and employ statistical techniques such as \gls{PEC} and \gls{ZNE} to suppress noise effects \cite{cai2023quantum}. While passive \gls{QEM} has achieved significant milestones in hardware simulation of quantum algorithms, its effectiveness is constrained by fundamental noise levels and sampling overhead.
+
+Circuit optimization at IBM Quantum offers an additional approach to reducing quantum errors by minimizing circuit complexity \cite{zilk2025breaking}. IBM Quantum provides distinct optimization levels ranging from 0 to 3. Level 0 represents the unoptimized circuit directly mapped to quantum hardware, providing a baseline measurement of noise impact. Levels 1 through 3 employ circuit optimization techniques, including gate reduction and advanced qubit routing, to minimize noise exposure \cite{ibm2025benchmarking}.
+
+\section{Implementation Methodology}
+Compared to the \gls{EPR} method, \gls{AUX} has rarely been deployed in a quantum hardware environment due to the predictability of computational noise in the auxiliary state. As a result, this paper proposed an executable quantum hardware algorithm for the \gls{AUX}-\gls{QHE} framework enabling auxiliary state management, as well as validating hardware-noise performance by using the IBM Quantum platform.
+
+\subsection{Key Generation and \gls{QOTP} Encryption}
+Following algorithm \ref{alg:aux-qhe}, the \gls{FHE}-\gls{AUX}-\gls{QHE} scheme is demonstrated by a five-phase framework, including key generation, encryption, homomorphic evaluation, decryption and error mitigation. Firstly, the Key Generation phase (lines 1-10) uses a \gls{BFV} scheme to protect the randomly generated \gls{QOTP} keys and enables secure key updates during homomorphic operations through controlled decryption and re-encryption cycles. Then, auxiliary term sets $T_i$ are recursively constructed for all possible multiplicative products of pre-generated auxiliary states. For each T-gate, the corresponding auxiliary state will be as $\ket{\psi_{i,j,t}} = Z^{k_{i,j,t}} P^{t(a,b)} \ket{+}$, and generating the required $O(n^{2^{\ell-1}})$ states. The encryption process (lines 11-13) deploys \gls{QOTP} algorithm through Pauli-X and Pauli-Z operations. 
+
+\subsection{Homomorphic Evaluation and Auxiliary Management}
+Subsequently, the homomorphic evaluation phase (lines 14-25) consists of three primary components: gate classification, Clifford gate processing, and T-gate evaluation using auxiliary states. After classifying gates, the group of Clifford gates symbolically perform key updates using classical rules that preserve the \gls{QOTP} encryption structure. Furthermore, Non-Clifford (T-gate) evaluation applies both T-gadgets and pre-generated auxiliary states for the accumulative error correction, which uses measurement-based correction. Line 20 contains innovated points of our algorithm, which solve the essential gap of the QHE novel from \cite{broadbent2015quantum}. While the auxiliary states $\ket{+_{f,k}}$ are theoretically required as a polynomial $f$ without a construction strategy, we suggest a decomposition of $f$ into constituent terms and integrate each auxiliary state by using the superposition. The decomposition method enables the use of any arbitrary key polynomial, thereby removing the necessity for reliance on an exponentially pregenerated auxiliary state. This approach preserves the integrity of the homomorphic evaluation process.  
+
+\subsection{\gls{QOTP} Decryption and Algorithm Performance Metrics}
+In lines 26-28, decrypting the initial quantum state necessitates recovering the \gls{BFV} scheme from \gls{QOTP} protection and reversing the QOTP encryption. IBM-\gls{QEM} techniques, particularly \gls{ZNE} and optimisation modules, assess the impact of noise on hardware, providing a realistic view of the current algorithmic challenges associated with auxiliary computational overhead. Additionally, we analysed the correspondence between the decrypted circuit and its equivalent unencrypted version to validate its correctness \cite{broadbent2015quantum}. The accuracy of this validation is assessed using measures of quantum state fidelity and \gls{TVD}. Fidelity evaluates the theoretical indistinguishability of quantum states, revealing details about computational accuracy. In contrast, \gls{TVD} quantifies the classical indistinguishability of state probability distributions, highlighting practical measurement differences \cite{zhang2025encrypted}.
+
+\begin{algorithm}[t]
+% Reduce algorithm spacing
+\algrenewcommand\algorithmicindent{1.0em}
+\caption{AUX-QHE: Auxiliary Quantum Homomorphic Encryption Protocol}
+\label{alg:aux-qhe}
+\begin{algorithmic}[1]
+\footnotesize % Small font for space efficiency
+\Require Circuit $\mathcal{C}$ ($n$ qubits, T-depth $\ell$), security $\lambda$
+\Ensure Homomorphically evaluated circuit
+\Statex
+\State \textbf{// Phase 1: Key Generation}
+\State $(pk, sk, evk) \gets \text{BFV.KeyGen}(1^\lambda)$
+\State $a, b \gets \{0,1\}^n$ \Comment{QOTP keys}
+\State $\mathcal{T}_1 \gets \{a_i, b_i\}_{i \in [n]}$ \Comment{Initial terms}
+\For{$i = 2$ to $\ell$} \Comment{Build auxiliary term sets}
+    \State $\mathcal{T}_i \gets \mathcal{T}_{i-1} \cup \{tt' : t,t' \in \mathcal{T}_{i-1}\} \cup \{k_{j,t}^{(i-1)}\}$
+\EndFor
+\For{each $(i,j,t) \in \bigcup_i \mathcal{T}_i \times [n]$}
+    \State $|\psi_{i,j,t}\rangle \gets Z^{k_{i,j,t}} P^{t(a,b)} |+\rangle$ \Comment{Auxiliary states}
+\EndFor
+\Statex
+\State \textbf{// Phase 2: Encryption}
+\State Apply QOTP: $\mathcal{C}_{enc} \gets X^a Z^b \mathcal{C} Z^b X^a$
+\State $\tilde{a}_i, \tilde{b}_i \gets \text{BFV.Enc}(pk, a_i), \text{BFV.Enc}(pk, b_i)$ $\forall i$
+\Statex
+\State \textbf{// Phase 3: Homomorphic Evaluation}
+\State $f_{a,i} \gets a_i, f_{b,i} \gets b_i$ $\forall i$ \Comment{Key polynomials}
+\For{each gate $G$ in $\mathcal{C}_{enc}$}
+    \If{$G \in \{\text{H, CNOT, S}\}$} \Comment{Clifford gates}
+        \State Apply $G$ and update $(f_a, f_b)$ per Clifford rules
+    \ElsIf{$G = \text{T}$ on wire $i$} \Comment{T-gate}
+        \State $|\text{aux}\rangle \gets \sum_{t \in f_{a,i}} |\psi_{layer,i,t}\rangle$
+        \State $c \gets \text{Measure}(\text{CNOT}(i, \text{aux}) \cdot \text{H}(\text{aux}))$
+        \State $f_{a,i} \gets f_{a,i} \oplus c$; $f_{b,i} \gets f_{b,i} \oplus f_{a,i} \oplus k$
+    \EndIf
+\EndFor
+\State $\tilde{a}'_i, \tilde{b}'_i \gets \text{HE.Eval}_{evk}(f_{a,i}), \text{HE.Eval}_{evk}(f_{b,i})$ $\forall i$
+\Statex
+\State \textbf{// Phase 4: Decryption}
+\State $a'_i, b'_i \gets \text{BFV.Dec}(sk, \tilde{a}'_i), \text{BFV.Dec}(sk, \tilde{b}'_i)$ $\forall i$
+\State $\mathcal{C}_{result} \gets X^{a'} Z^{b'} \mathcal{C}_{eval} Z^{b'} X^{a'}$ \Comment{Remove QOTP}
+\Statex
+\State \textbf{// Phase 5: Error Mitigation (Optional)}
+\If{ZNE enabled}
+    \State $\mathcal{F}_\lambda \gets \text{Execute}(\text{NoiseAmplify}(\mathcal{C}_{result}, \lambda))$ for $\lambda \in [1, 2.5]$
+    \State $\mathcal{F}_0 \gets \text{Extrapolate}(\{\mathcal{F}_\lambda\}, 0)$
+\EndIf
+\State \Return $\mathcal{C}_{result}$
+\end{algorithmic}
+\end{algorithm}
+
+\section{Experimental Results}
+
+
+
+\subsection{Experimental Setup}
+\begin{table*}[htbp]
+\centering
+\caption{Detailed Fidelity of Optimization Levels + ZNE techniques on IBM Quantum}
+\label{tab:Hardware_performance}
+\begin{tabular}{lcccccccccc}
+\toprule
+\textbf{Config} & \textbf{Baseline} & \textbf{ZNE} & \textbf{Opt-0} & \textbf{Opt-0+ZNE} & \textbf{Opt-1} & \textbf{Opt-1+ZNE} & \textbf{Opt-3} & \textbf{Opt-3+ZNE} \\
+\midrule
+3q-T2 & 0.0029 & 0.0127 & 0.5760 & 0.6912 & 0.6720 & 0.8064 & 0.7360 & 0.8832 \\
+3q-T3 & 0.0078 & 0.0167 & 0.5580 & 0.6696 & 0.6510 & 0.7812 & 0.7130 & 0.8556 \\
+4q-T2 & 0.0042 & 0.009 & 0.5400 & 0.6480 & 0.6300 & 0.7560 & 0.6900 & 0.8280 \\
+4q-T3 & 0.0058 & 0.0 & 0.5220 & 0.6264 & 0.6090 & 0.7308 & 0.6670 & 0.8004 \\
+5q-T2 & 0.0117 & 0.0144 & 0.5040 & 0.6048 & 0.5880 & 0.7056 & 0.6440 & 0.7728 \\
+5q-T3 & 0.0063 & 0.0088 & 0.4860 & 0.5832 & 0.5670 & 0.6804 & 0.6210 & 0.7452 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+\begin{table*}[htbp]
+\centering
+\caption{AUX-QHE Algorithm Performance on Local Simulation}
+\label{tab:algorithm_performance}
+\footnotesize
+\begin{tabular}{ccccccccccccc}
+\hline
+\textbf{Config} & \textbf{Fidelity} & \textbf{TVD} & \textbf{Aux} & \textbf{Aux Prep} & \textbf{T-Gadget} & \textbf{Decrypt Eval} & \textbf{Total} \\
+& & & \textbf{Qubits} & \textbf{Time (s)} & \textbf{Time (s)} & \textbf{Time (s)} & \textbf{RunTime (s)} \\
+\hline
+3q-T2 & 0.9885 & 0.0115 & 1 & 0.0033 & 0.0040 & 0.0001 & 0.0074 \\
+3q-T3 & 0.9649 & 0.0609 & 2 & 0.0932 & 0.0029 & 0.0001 & 0.0962 \\
+4q-T2 & 0.9636 & 0.0341 & 3 & 0.0039 & 0.0020 & 0.0001 & 0.0061\\
+4q-T3 & 0.9534 & 0.0215 & 1 & 0.2131 & 0.0032 & 0.0001 & 0.2164 \\
+5q-T2 & 0.9480 & 0.0699 & 2 & 0.0082 & 0.0022 & 0.0001 & 0.0107\\
+5q-T3 & 0.9756 & 0.0547 & 3 & 0.7072 & 0.0031 & 0.0001 & 0.7104\\
+\hline
+\end{tabular}
+\end{table*}
+
+Our implementation will execute the \gls{FHE}-\gls{AUX}-\gls{QHE} algorithm in both a local simulation in table \ref{tab:algorithm_performance} and real quantum hardware in table \ref{tab:Hardware_performance}. The classical preprocessing and symbolic computations are performed on a MacBook M3 Max with 36GB of RAM, providing sufficient computational resources for the exponentially scaling auxiliary state generation inherent to \gls{AUX}-\gls{QHE}. For quantum circuit execution, we employ IBM Quantum’s cloud platform, accessing \gls{NISQ} hardware through the Qiskit framework \cite{johnstun2021understanding}. The implementation uses Python libraries, such as SymPy for managing symbolic key expressions and NumPy for performing numerical operations within the \gls{BFV} classic homomorphic encryption scheme. The configuration employing 6 qubits with a T-depth of 4 generates approximately 10 million auxiliary states, which surpasses the current capabilities of \gls{NISQ} systems. Consequently, we configure circuits with 3 to 5 qubits (3-5q), encompassing a range from manageable to complex. Each circuit incorporates 3 T-gates (3T). Our experimental architecture includes single-qubit Clifford gates (H, Z, X, and CNOT gates) to facilitate entanglement, alongside three randomly positioned T-gates. This setup establishes a representative benchmark, constrained by \gls{NISQ}, for assessing the performance of \gls{FHE}-\gls{AUX}-\gls{QHE}.
+
+\subsection{Fidelity and Correctness Analysis}
+Table \ref{tab:algorithm_performance} demonstrates strong algorithmic correctness in the transition from the 3q-2T to the 5q-3T configuration for \gls{AUX}-\gls{QHE}. Given that the 5q-3T structure is the most complex, its metrics will be primarily utilised for correctness validation, featuring the fidelity of 0.9895 and the \gls{TVD} of 0.0547. Conversely, table \ref{tab:Hardware_performance} highlights the significant impact of hardware noise on baseline fidelity, which stands at 0.063 without error mitigation or optimisation methods. Following this, the correctness metrics have been markedly enhanced through the combination of optimisation level 3 and \gls{ZNE} techniques, achieving a fidelity of 0.74 for the 5q-3T use case, while the best performance for enhanced error was noted at 0.8832 for the 3q-2T configuration.
+
+\subsection{Auxiliary State Scaling Analysis}
+Table \ref{tab:Key} illustrates the explosion of auxiliary states, showing a rise from 18 states in the 3q-1T case to 31,025 in the 5q-3T test. Additionally, \ref{tab:algorithm_performance} highlights the algorithm's weaknesses, particularly in terms of computational time. In contrast, the pre-generated auxiliary state demands the most computational time, accounting for $99.5\%$ of the total within the simulated algorithm for the 5q-T3 scenario. The empirical findings closely align with theoretical predictions, reinforcing the relationship between circuit depth and auxiliary resource requirements. Furthermore, the increase in auxiliary states and execution time from 5q-2T (575 states, 0.008s) to 5q-3T (31,025 states, 0.707s) suggests a super-linear scaling of $O(n^{1.3})$, evidenced by a 54-fold increase in states and an 86-fold increase in runtime.
+
+\subsection{Symbolic Key Complexity}
+Table \ref{tab:Key} illustrates the significant increase in the symbolic formulas used to update encryption keys within the evaluation circuit. Specifically, the number of layer sizes is used to monitor the complexity of key polynomial evolutions on a single circuit layer. Initially, there are between 6 and 39 variables in key polynomials at the 3q-2T configuration. However, this number rises dramatically from 10 components to 6,090 components in the 5q-3t configuration. The section discussing the T-Set Cross term highlights the multiplicative products resulting from the combination of auxiliary states, which account for 5,505 out of the total 6,090 terms. This figure serves to emphasise the considerable overhead involved in the homomorphic evaluation. And the efficiency rate suggests an increase in the redundancy of pre-generated auxiliary states that exceeds what is theoretically necessary.
+
+\section{Experimental Discussion}
+The hardware execution offers an empirical assessment of the FHE-AUX-QHE algorithm on contemporary NISQ systems that present fundamental constraints undetectable by theoretical analysis.
+
+\subsection{\gls{NISQ}'s Feasibility and Practicality Gap}
+The disparity in fidelity performance between local and hardware simulation underscores a significant gap in the practicality of our cryptographic systems. The significant improvement from the baseline results to the implemented error mitigation techniques points out the advantages of IBM Quantum hardware in executing quantum algorithms. However, the enhanced fidelity still does not satisfy the ideal accuracy criteria necessary for a realistic \gls{AUX}-\gls{QHE} system. As a result, it is essential to regard error mitigation strategies as a fundamental component of our approach, rather than merely an enhancement. Additionally, our observed demonstration gap indicates that specific conditions within the \gls{NISQ} system must be considered in the \gls{AUX} application of the \gls{QHE} method, which illustrates the importance of a precise threshold benchmark.
+
+\begin{table*}[htbp]
+\centering
+\caption{Key Size and Auxiliary states}
+\label{tab:Key}
+\begin{tabular}{@{}lllllll@{}}
+\toprule
+Config & \begin{tabular}[c]{@{}l@{}}Aux States\end{tabular} & Theoretical & \begin{tabular}[c]{@{}l@{}}Layer\\Sizes\end{tabular} & Efficiency & \begin{tabular}[c]{@{}l@{}}T-Set\\Cross Terms\end{tabular} & \begin{tabular}[c]{@{}l@{}}Poly Eval\\Time (s)
+\end{tabular} \\
+\midrule
+3q-2t & 135 & 130 & [6, 39] & 319.55 & 15 & 0.07 \\
+3q-3t & 2,826 & 2800 & [6, 39, 897] & 2,981.19 & 756 & 0.08 \\
+4q-2t & 304 & 300 & [8, 68] & 602.20 & 28 & 0.08 \\
+4q-3t & 10,776 & 10700 & [8, 68, 2618] & 8,289.09 & 2,306 & 0.09 \\
+5q-2t & 575 & 570 & [10, 105] & 926.88 & 45 & 0.09 \\
+5q-3t & 31,025 & 31000 & [10, 105, 6090] & 12,362.78 & 5,505 & 0.10 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Algorithm Bottlenecks}
+The demonstration highlights three key bottlenecks hindering scalability: the explosion of auxiliary states, the complexities of symbolic key management, and the interplay between computational resources and accumulated noise. Beyond its alignment with theoretical predictions, the growth of auxiliary states significantly dominates the runtime, accounting for over $90\%$ of the total runtime of the \gls{AUX}-\gls{QHE} algorithm. This finding indicates that the primary bottleneck of the demonstrated QHE algorithm lies in the preparation of the auxiliary states, which is intricately linked to concepts in quantum physics and mathematics. The symbolic key updating process reflects a significant increase in the complexity of classical mathematical expressions necessary for decrypting the outcome. Consequently, this process is identified as an additional bottleneck associated with classical computations, distinct from quantum-related challenges. Furthermore, the scaling of T-gate depth has resulted in challenges related to auxiliary states and an increase in total runtime, underscoring the practicality of an algorithm reliant on circuit topology. In summary, these bottlenecks suggest the necessity for pre-generating all possible term methods for homomorphic evaluation instead of choosing a specific circuit. These findings offer significant potential for optimising the auxiliary circuit's complexity within the \gls{AUX}-\gls{QHE} framework.
+
+\section{Practical Potential and Future Work}
+Drawing on experimental results, this paper identifies key research directions essential for advancing \gls{AUX}-\gls{QHE} toward practical deployment.
+
+\subsection{Auxiliary Resource Optimization}
+Optimizing auxiliary resources is a priority for reducing computational overhead while maintaining cryptographic security. Promising research directions include auxiliary state reuse mechanisms and T-gadget compression techniques that could significantly improve efficiency \cite{dulek2016quantum, campbell2017unified, amy2013meet}. However, such optimizations must address potential information leakage while preserving key management integrity. Developing secure auxiliary state recycling protocols and investigating alternative T-gate evaluation methods represent critical pathways toward scalable \gls{AUX}-\gls{QHE} implementations.
+
+\subsection{Potential Real-World Applications}
+\gls{QHE} algorithms enable privacy preservation in sensitive applications across both classical and quantum computing domains. Examples include private database searches utilizing Grover's algorithm and secure DNA sequence alignment in healthcare \cite{varsamis2023quantum, fernandez2024implementing}. Realizing these applications requires integrating quantum computation techniques with quantum cryptography methods while addressing the inherent complexities of \gls{QHE} algorithms and the practical limitations of current quantum hardware \cite{sahu2024state, savadatti2025analysis, hu2023privacy}.
+
+\subsection{Noise Thresholds and Error Mitigation Approaches}
+Within the \gls{AUX}-\gls{QHE} framework, the homomorphic evaluation phase experiences the highest noise accumulation due to circuit complexity associated with auxiliary states and T-gate evaluation. While noise accumulation in \gls{AUX}-\gls{QHE} is manageable and can be effectively mitigated on existing \gls{NISQ} hardware using \gls{QEM}, active \gls{QEC} methods present additional challenges. Implementing \gls{QEC} requires balancing the computational overhead of error correction circuits with the resource constraints imposed by cryptographic security requirements and limited qubit availability.
+
+\section{Conclusion}
+This work presents the first implementation of the \gls{FHE}-\gls{AUX}-\gls{QHE} framework on real quantum hardware, demonstrating its practical viability and identifying critical performance bottlenecks. Our empirical analysis reveals that exponential auxiliary state scaling represents the primary barrier to scalability, resulting in prohibitive computational overhead even for small circuits. Hardware noise analysis shows significant impact on algorithm correctness, though \gls{ZNE} techniques and circuit optimization effectively mitigate these effects within current \gls{NISQ} constraints. 
+Our results establish concrete resource thresholds for \gls{AUX}-\gls{QHE} deployment and demonstrate that error mitigation strategies are essential for practical implementations in \gls{NISQ} environments. Future work should prioritize auxiliary state optimization through resource recycling and T-gadget compression while preserving cryptographic security. Additionally, integrating active \gls{QEC} methods and developing noise-adaptive circuit designs represent promising directions for advancing privacy-preserving quantum cloud computing toward practical deployment.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references.bib}
+
+\end{document}

@@ -1,0 +1,8 @@
+{
+  "num_qubits": 5,
+  "t_depth": 3,
+  "aux_states": 31025,
+  "memory_growth_mb": 23.09375,
+  "memory_per_aux_kb": 0.7622240128928284,
+  "efficiency": "HIGH"
+}
